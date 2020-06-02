@@ -1,0 +1,9 @@
+A*
+with time
+no open
+3x3
+Black:
+Red:
+8,5,3
+2,4,1
+7,6,_
