@@ -4,16 +4,24 @@ import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Queue;
-
+/**
+ * this class represents the BFS algorithm used to find goal Node by breadth search
+ * @author Edut Cohen
+ *
+ */
 public class BFS implements Algorithm{
-	long time;
-	long start;
-	long end;
+	long time=0;
+	int nodeCounter=1;
+ 
+	/**
+	 * after finding goal state and path to it, save the result to file 
+	 */
 	public  void saveToFile( boolean toTime,  Node g , int Num)  {		
+
 		try 
 		{
-			if(g!=null) {
-				PrintWriter pw = new PrintWriter(new File("output.txt"));
+			if(g!=null) { //a path was found
+				PrintWriter pw = new PrintWriter(new File(outputfile));
 				StringBuilder sb = new StringBuilder();
 				sb=sb.append(g.path().substring(0, g.path().length()-1));
 				sb=sb.append("\nNum: "+Num);
@@ -25,8 +33,8 @@ public class BFS implements Algorithm{
 				pw.write(sb.toString());
 				pw.close();
 			}
-			else {
-				PrintWriter pw = new PrintWriter(new File("output.txt"));
+			else { //no path was found
+				PrintWriter pw = new PrintWriter(new File(outputfile));
 				StringBuilder sb = new StringBuilder();
 				sb=sb.append("no path");
 				sb=sb.append("\nNum: "+Num);
@@ -45,16 +53,25 @@ public class BFS implements Algorithm{
 		}
 	}
 
-	public  String solve(Node root, boolean toTime, boolean openList) {
+	/**
+	 * find a path to goal state using BFS algorithm (with loop avoidance)
+	 */
+	public  String solve(Node root, boolean toTime, boolean openListPrint) {
 		Node goal=null;
-		start= System.currentTimeMillis();
-		int i=1;
+		long start= System.currentTimeMillis();
+		if(!root.getState().colorSolvable()) {
+			long end=System.currentTimeMillis();
+			time=end-start;
+			saveToFile(toTime, goal, 1);
+			return "no path";
+		}
 		Queue<Node> Q = new LinkedList<Node>(); 
+		HashMap<String, Node> openListHash= new HashMap<String, Node>();
 		Q.add(root);
-		HashMap<String, Node> openListFollow= new HashMap<String, Node>();
+		openListHash.put(root.getDesc(), root);
 		HashMap<String, Node> closeList= new HashMap<String, Node>();
 		while(!Q.isEmpty()) {
-			if(openList) {
+			if(openListPrint) {
 				System.out.println("*********************************************************");
 				for (Node node : Q) {
 					System.out.println(node.getState().toString());
@@ -62,82 +79,91 @@ public class BFS implements Algorithm{
 				}
 				System.out.println("*********************************************************");
 			}
-			Node current=Q.poll();
-			openListFollow.put(current.getState().StringDesc(), current);
+			Node current=Q.poll(); //remove the first Node from open list queue and open list hash
+			openListHash.remove(current.getDesc(), current);
+			closeList.put(current.getState().StringDesc(), current); //add it to close list
 			Node l=current.exploreLeft();
 			if(l!=null) {
-				i++;
-				if(!openListFollow.containsKey(l.getDesc()) 
+				nodeCounter++;
+				if(!openListHash.containsKey(l.getDesc()) //if not a new Node ignore
 						&& !closeList.containsKey(l.getState().StringDesc())) { //Totally new node
-					if(l.isGoal()) {  
+					if(l.isGoal()) {  //if goal save to file and end searching
 						goal=l;
 						Q.add(l);
-						end=System.currentTimeMillis();
+						long end=System.currentTimeMillis();
 						time=end-start;
 						String timeTemp=String.format("%.4f",(time *Math.pow(10, -3)));
-						saveToFile(toTime, goal, i);
-						return "BFS result is\n"+ goal.path().substring(0, goal.path().length()-1)+"\n"+"num:"+i+"\ncost: "+goal.getCost()+"\n"+timeTemp+" seconds";
+						saveToFile(toTime, goal, nodeCounter);
+						return "BFS result is\n"+ goal.path().substring(0, goal.path().length()-1)+"\n"+"num:"+nodeCounter+"\ncost: "+goal.getCost()+"\n"+timeTemp+" seconds";
 					}
-					Q.add(l);
+					Q.add(l); //add new Node to open list- queue and hash
+					openListHash.put(l.getDesc(), l);
 				}
 			}
 			Node u=current.exploreUp();
 			if(u!=null) {
-				i++;
-				if(!openListFollow.containsKey(u.getDesc()) 
+				nodeCounter++;
+				if(!openListHash.containsKey(u.getDesc())  //if not a new Node ignore
 						&& !closeList.containsKey(u.getState().StringDesc())) { //Totally new node
-					if(u.isGoal()) {  
+					if(u.isGoal()) {  //if goal save to file and end searching
 						goal=u;
 						Q.add(u);
-						end=System.currentTimeMillis();
+						long end=System.currentTimeMillis();
 						time=end-start;
 						String timeTemp=String.format("%.4f",(time *Math.pow(10, -3)));
-						saveToFile(toTime, goal, i);
-						return "BFS result is\n"+ goal.path().substring(0, goal.path().length()-1)+"\n"+"num:"+i+"\ncost: "+goal.getCost()+"\n"+timeTemp+" seconds";
+						saveToFile(toTime, goal, nodeCounter);
+						return "BFS result is\n"+ goal.path().substring(0, goal.path().length()-1)+"\n"+"num:"+nodeCounter+"\ncost: "+goal.getCost()+"\n"+timeTemp+" seconds";
 					}
-					Q.add(u);
+					Q.add(u); //add new Node to open list- queue and hash
+					openListHash.put(u.getDesc(), u);
+
 				}
 			}
 			Node r=current.exploreRight();
 			if(r!=null) {
-				i++;
-				if(!openListFollow.containsKey(r.getDesc()) 
+				nodeCounter++;
+				if(!openListHash.containsKey(r.getDesc())  //if not a new Node ignore
 						&& !closeList.containsKey(r.getState().StringDesc())) { //Totally new node
-					if(r.isGoal()) {  
+					if(r.isGoal()) {  //if goal save to file and end searching
 						goal=r;
 						Q.add(r);
-						end=System.currentTimeMillis();
+						long end=System.currentTimeMillis();
 						time=end-start;
 						String timeTemp=String.format("%.4f",(time *Math.pow(10, -3)));
-						saveToFile(toTime, goal, i);
-						return "BFS result is\n"+ goal.path().substring(0, goal.path().length()-1)+"\n"+"num:"+i+"\ncost: "+goal.getCost()+"\n"+timeTemp+" seconds";
+						saveToFile(toTime, goal, nodeCounter);
+						return "BFS result is\n"+ goal.path().substring(0, goal.path().length()-1)+"\n"+"num:"+nodeCounter+"\ncost: "+goal.getCost()+"\n"+timeTemp+" seconds";
 					}
-					Q.add(r);
+					Q.add(r); //add new Node to open list- queue and hash
+					openListHash.put(r.getDesc(), r);
+
 				}
 			}
 			Node d=current.exploreDown();
 			if(d!=null) {
-				i++;
-				if(!openListFollow.containsKey(d.getDesc()) 
+				nodeCounter++;
+				if(!openListHash.containsKey(d.getDesc())  //if not a new Node ignore
 						&& !closeList.containsKey(d.getState().StringDesc())) { //Totally new node
-					if(d.isGoal()) {  
+					if(d.isGoal()) {  //if goal save to file and end searching
 						goal=d;
 						Q.add(d);
-						end=System.currentTimeMillis();
+						long end=System.currentTimeMillis();
 						time=end-start;
 						String timeTemp=String.format("%.4f",(time *Math.pow(10, -3)));
-						saveToFile(toTime, goal, i);
-						return "BFS result is\n"+ goal.path().substring(0, goal.path().length()-1)+"\n"+"num:"+i+"\ncost: "+goal.getCost()+"\n"+timeTemp+" seconds";
+						saveToFile(toTime, goal, nodeCounter);
+						return "BFS result is\n"+ goal.path().substring(0, goal.path().length()-1)+"\n"+"num:"+nodeCounter+"\ncost: "+goal.getCost()+"\n"+timeTemp+" seconds";
 					}
-					Q.add(d);
+					Q.add(d); //add new Node to open list- queue and hash
+					openListHash.put(d.getDesc(), d);
+
 				}
 			}
 
 		}
-		end=System.currentTimeMillis();
+		//if a goal Node was not found
+		long end=System.currentTimeMillis();
 		time=end-start;
 		String timeTemp=String.format("%.4f",(time *Math.pow(10, -3)));
-		saveToFile(toTime, goal, i);
+		saveToFile(toTime, goal, nodeCounter);
 		return "no path\n"+timeTemp+" seconds";
 	}
 }

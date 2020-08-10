@@ -1,14 +1,26 @@
 import java.util.ArrayList;
-
+/**
+ * This class represents a node in every search algorithm
+ * @author Edut Cohen
+ *
+ */
 public class Node {
 
 	private Board state;
 	private Node parent;
-	private int depth;
+	private int depth; //for bfs
+	private int key; //for comparator
 	private String step;
 	private int h,g,f, cost;
-	private String luz;
-	
+	private String mark;
+
+	/**
+	 * constructor
+	 * @param s
+	 * @param p
+	 * @param st
+	 * @param price
+	 */
 	public Node (Board s, Node p, String st, int price) {
 		cost=price;
 		state=s;
@@ -17,123 +29,158 @@ public class Node {
 			depth=p.getDepth()+1;
 		else depth=0;
 		step=st;
-		heuristicA();
-		fcalculateA();
-		luz="";
+		heuristic();
+		fcalculate();
+		mark="";
 	}
-	
+
+	/** 
+	 * checks whether the node is a goal state
+	 * @return
+	 */
 	public boolean isGoal(){
 		for(int i=0; i<this.state.height; i++) {
 			for (int j = 0; j < this.state.width; j++) {
 				if((i!=this.state.height-1 || j!=this.state.width-1)
-						&& (this.state.matrix[i][j].num != (this.state.width*i+j+1)))
+						&& (this.state.matrix[i][j].getNum() != (this.state.width*i+j+1)))
 					return false;
 			}
 		}
 		return true;
 	}
-	
 
+	/**
+	 * if possible returns a Node created by main Node by a down movement
+	 * @return
+	 */
 	public Node exploreDown() {
 		if(this.canBeExploredD()) {
-			int val= this.state.matrix[this.state.hBlock-1][this.state.wBlock].num;
+			int val= this.state.matrix[this.state.hBlank-1][this.state.wBlank].getNum();
 			int stepCost;
-			if(this.state.matrix[this.state.hBlock-1][this.state.wBlock].color=="red")
+			if(this.state.matrix[this.state.hBlank-1][this.state.wBlank].getColor()=="red")
 				stepCost=30;
 			else stepCost=1;
 			Board myState=new Board(this.state);
 			myState.moveDown();
 			Node n= new Node(myState, this, val+"D-", this.cost+stepCost);
-			n.state.hBlock--;
+			n.state.hBlank--;
 			return n;
 		}
 		return null;
 	}
 
+	/**
+	 * checks if down son is legal
+	 * @return
+	 */
 	private boolean canBeExploredD() {
-		if(this.state.hBlock==0)
+		if(this.state.hBlank==0)
 			return false;
-		if(this.state.matrix[this.state.hBlock-1][this.state.wBlock].color=="black")
+		if(this.state.matrix[this.state.hBlank-1][this.state.wBlank].getColor()=="black")
 			return false;
 		if(this.parent!=null && this.step.contains("U"))
 			return false;
 		return true;
 	}
 
+	/**
+	 * if possible returns a Node created by main Node by a right movement
+	 * @return
+	 */
 	public Node exploreRight() {
 		if(this.canBeExploredR()) {
-			
+
 			if(depth==1);
-			int val= this.state.matrix[this.state.hBlock][this.state.wBlock-1].num;
+			int val= this.state.matrix[this.state.hBlank][this.state.wBlank-1].getNum();
 			int stepCost;
-			if(this.state.matrix[this.state.hBlock][this.state.wBlock-1].color=="red")
+			if(this.state.matrix[this.state.hBlank][this.state.wBlank-1].getColor()=="red")
 				stepCost=30;
 			else stepCost=1;
 			Board myState=new Board(this.state);
 			myState.moveRight();
 			Node n= new Node(myState, this, val+"R-",this.cost+stepCost);
-			n.state.wBlock--;
+			n.state.wBlank--;
 			return n;
 		}
 		return null;
 	}
 
+	/**
+	 * checks if right son is legal
+	 * @return
+	 */
 	private boolean canBeExploredR() {
-		if(this.state.wBlock==0)
+		if(this.state.wBlank==0)
 			return false;
-		if(this.state.matrix[this.state.hBlock][this.state.wBlock-1].color=="black")
+		if(this.state.matrix[this.state.hBlank][this.state.wBlank-1].getColor()=="black")
 			return false;
 		if(this.parent!=null && this.step.contains("L"))
 			return false;
 		return true;
 	}
 
+	/**
+	 * if possible returns a Node created by main Node by an up movement
+	 * @return
+	 */
 	public Node exploreUp() {
 		if(this.canBeExploredU()) {
-			int val= this.state.matrix[this.state.hBlock+1][this.state.wBlock].num;
+			int val= this.state.matrix[this.state.hBlank+1][this.state.wBlank].getNum();
 			int stepCost;
-			if(this.state.matrix[this.state.hBlock+1][this.state.wBlock].color=="red")
+			if(this.state.matrix[this.state.hBlank+1][this.state.wBlank].getColor()=="red")
 				stepCost=30;
 			else stepCost=1;
 			Board myState=new Board(this.state);
 			myState.moveUp();
 			Node n= new Node(myState, this, val+"U-", this.cost+stepCost);
-			n.state.hBlock++;
+			n.state.hBlank++;
 			return n;
 		}
 		return null;
 	}
 
+	/**
+	 * checks if up son is legal
+	 * @return
+	 */
 	private boolean canBeExploredU() {
-		if(this.state.hBlock==this.state.height-1)
+		if(this.state.hBlank==this.state.height-1)
 			return false;
-		if(this.state.matrix[this.state.hBlock+1][this.state.wBlock].color=="black")
+		if(this.state.matrix[this.state.hBlank+1][this.state.wBlank].getColor()=="black")
 			return false;
 		if(this.parent!=null && this.step.contains("D"))
 			return false;
 		return true;
 	}
 
+	/**
+	 * if possible returns a Node created by main Node by a left movement
+	 * @return
+	 */
 	public Node exploreLeft() {
 		if(this.canBeExploredL()) {
-			int val= this.state.matrix[this.state.hBlock][this.state.wBlock+1].num;
+			int val= this.state.matrix[this.state.hBlank][this.state.wBlank+1].getNum();
 			int stepCost;
-			if(this.state.matrix[this.state.hBlock][this.state.wBlock+1].color=="red")
+			if(this.state.matrix[this.state.hBlank][this.state.wBlank+1].getColor()=="red")
 				stepCost=30;
 			else stepCost=1;
 			Board myState=new Board(this.state);
 			myState.moveLeft();
 			Node n= new Node(myState, this, val+"L-", this.cost+stepCost);
-			n.state.wBlock++;
+			n.state.wBlank++;
 			return n;
 		}
 		return null;
 	}
 
+	/**
+	 * checks if left son is legal
+	 * @return
+	 */
 	private boolean canBeExploredL() {
-		if(this.state.wBlock==this.state.width-1)
+		if(this.state.wBlank==this.state.width-1)
 			return false;
-		if(this.state.matrix[this.state.hBlock][this.state.wBlock+1].color=="black")
+		if(this.state.matrix[this.state.hBlank][this.state.wBlank+1].getColor()=="black")
 			return false;
 		if(this.parent!=null && this.step.contains("R")) {
 			return false;
@@ -141,6 +188,42 @@ public class Node {
 		return true;
 	}
 
+	/**
+	 * returns a list of all legal sons of the main node by the given order
+	 * @return
+	 */
+	public ArrayList<Node> expendAll(){
+		ArrayList<Node> sons= new ArrayList<Node>();
+		Node l=this.exploreLeft();
+		if (l!=null)
+			sons.add(l);
+		Node u=this.exploreUp();
+		if (u!=null)
+			sons.add(u);
+		Node r=this.exploreRight();
+		if (r!=null)
+			sons.add(r);
+		Node d=this.exploreDown();
+		if (d!=null)
+			sons.add(d);
+		return sons;
+	}
+
+	/**
+	 * returns a string that represents the path from root node to this node
+	 * @return
+	 */
+	public String path() {
+		if(this.parent==null)
+			return "";
+		String s=this.step;
+		return this.parent.path()+s;
+	}
+
+
+	/*
+	 * getters & setters
+	 */
 	public String getStep() {
 		return step;
 	}
@@ -165,98 +248,61 @@ public class Node {
 	public void setState(Board state) {
 		this.state = state;
 	}
-
-
-
 	public int getF() {
 		return f;
 	}
-
-
-
 	public void setF(int f) {
 		this.f = f;
 	}
-
-
-
 	public int getG() {
 		return g;
 	}
-
-
-
 	public void setG(int g) {
 		this.g = g;
 	}
-
-
-
-	public int getH() {
-		
+	public int getH() {	
 		return h;
 	}
-
-
-
-	public int heuristicA() {
-		h=this.state.heuristicA();
+	public int heuristic() {
+		h=this.state.heuristic();
 		return h;
 	}
-	
-	public int fcalculateA() {
+	public int fcalculate() {
 		f=h+cost;
 		return f;
 	}
-	
 	public int getCost() {
 		return cost;
 	}
+
+	public String getmark() {
+		return mark;
+	}
+	public void setmark(String mark) {
+		this.mark = mark;
+	}
+	public String getDesc() {
+		return this.state.StringDesc();
+	}
+	public int getKey() {
+		return key;
+	}
+	public void setKey(int key) {
+		this.key = key;
+	}
+	/**
+	 * deep compare to another node
+	 * @param other
+	 * @return
+	 */
 	boolean equals(Node other) {
 		if(other!=null && this.state.equals(other.state))
 			return true;
 		return false;
 	}
-	
+
 	public String toString() {
 		String ans="state:"+state+"\n step: "+step+"\n depth: "+depth;
 		return ans;
-	}
-
-	public String path() {
-		if(this.parent==null)
-			return "";
-		String s=this.step;
-			return this.parent.path()+s;
-	//	else return s.substring(0, 1);
-	}
-
-	public String getLuz() {
-		return luz;
-	}
-
-	public void setLuz(String luz) {
-		this.luz = luz;
-	}
-
-	public ArrayList<Node> expendAll(){
-		ArrayList<Node> sons= new ArrayList<Node>();
-		Node l=this.exploreLeft();
-		if (l!=null)
-			sons.add(l);
-		Node u=this.exploreUp();
-		if (u!=null)
-			sons.add(u);
-		Node r=this.exploreRight();
-		if (r!=null)
-			sons.add(r);
-		Node d=this.exploreDown();
-		if (d!=null)
-			sons.add(d);
-		return sons;
-	}
-
-	public String getDesc() {
-		return this.state.StringDesc();
 	}
 }

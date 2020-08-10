@@ -3,9 +3,19 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Stack;
-
+/**
+* this class represents the IDA* algorithm used to find the cheapest goal Node
+* using iterative deepening A*
+* @author Edut Cohen
+*
+*/
 public class IDAstar implements Algorithm{
 	private long time=0;
+	int nodeCounter=1;
+	
+	/**
+	 * after finding goal state and path to it, save the result to file 
+	 */
 	@Override
 	public void saveToFile(boolean toTime,  Node g, int Num) {
 		try 
@@ -45,101 +55,108 @@ public class IDAstar implements Algorithm{
 
 
 
-
+	/**
+	 * find the cheapest path to goal state using IDA* algorithm
+	 */
 	@Override
 	public String solve(Node root, boolean toTime, boolean openList) {
 		long start= System.currentTimeMillis();
-		Stack<Node> stack=new Stack<Node>();
-		HashMap<String, Node> h= new HashMap<String, Node>();
-		int t= root.heuristicA();
-		int nodesnum=1;
+		if(!root.getState().colorSolvable()) {
+			long end=System.currentTimeMillis();
+			time=end-start;
+			saveToFile(toTime, null, 1);
+			return "no path";
+		}
+		Stack<Node> openListStuck=new Stack<Node>();
+		HashMap<String, Node> openListHash= new HashMap<String, Node>();
+		int t= root.heuristic();
 		while(t!=Integer.MAX_VALUE) {
 			int minF=Integer.MAX_VALUE;
-			stack.add(root);
-			h.put(root.getDesc(), root);
-			while(!stack.isEmpty()) {
+			openListStuck.add(root); //add root to open list- queue and hash map
+			openListHash.put(root.getDesc(), root);
+			while(!openListStuck.isEmpty()) {
 				if(openList) {
 					System.out.println("*********************************************************");
-					for (Node curr : stack) {
+					for (Node curr : openListStuck) {
 						System.out.println(curr.getState().toString());
 						System.out.println("            ----------------------");
 					}
 					System.out.println("*********************************************************");
 				}
-				Node curr=stack.pop();
+				Node curr=openListStuck.pop(); //get current Node from stuck
 				String currDesc=curr.getDesc();
-				if(h.containsKey(currDesc) &&
-						h.get(currDesc).getLuz().contentEquals("out"))
-					h.remove(currDesc, curr);
+				if(openListHash.containsKey(currDesc) &&
+						openListHash.get(currDesc).getmark().contentEquals("out")) //if such state exists already and was explored
+					openListHash.remove(currDesc, curr); //remove from hash
 				else {
-					curr.setLuz("out");
-					stack.add(curr);
+					curr.setmark("out");
+					openListStuck.add(curr);
 					String sonDesc;
-					Node l= curr.exploreLeft();
+					Node l= curr.exploreLeft(); //creates left son
 					if(l!=null) {
-						nodesnum++;
+						nodeCounter++;
 						sonDesc=l.getDesc();
-						if(l.fcalculateA()> t) {
-							minF=Math.min(minF, l.fcalculateA());
+						if(l.fcalculate()> t) { //is h(son)+g(son) is greater than threshold
+							minF=Math.min(minF, l.fcalculate()); //update threshold
 							;
 						}
 						else {
-							if(h.containsKey(sonDesc) ) {
-								Node prevIdenticalSon=h.get(sonDesc);
-								if(prevIdenticalSon.getLuz().contentEquals("out"))
+							if(openListHash.containsKey(sonDesc) ) { //such state is in the open list
+								Node prevIdenticalSon=openListHash.get(sonDesc);
+								if(prevIdenticalSon.getmark().contentEquals("out")) //and mark as out- ignore
 									;
 								else {
-									if(prevIdenticalSon.fcalculateA() > l.fcalculateA())
+									if(prevIdenticalSon.fcalculate() > l.fcalculate()) //if current son is cheaper replace
 										prevIdenticalSon=l;
 									else
 										;
 								}
 							}
 							else {
-								if(l.isGoal()) {
+								if(l.isGoal()) { //goal Node is found, return result
 									time=System.currentTimeMillis()-start;
 									String timeTemp=String.format("%.4f",(time *Math.pow(10, -3)));
-									saveToFile(toTime, l, nodesnum);
-									return "IDA* result is\n"+ l.path().substring(0, l.path().length()-1)+"\n"+"num: "+nodesnum+"\ncost: "+l.getCost()+"\n"+timeTemp+" milliseconds";
+									saveToFile(toTime, l, nodeCounter);
+									return "IDA* result is\n"+ l.path().substring(0, l.path().length()-1)+"\n"+"num: "+nodeCounter+"\ncost: "+l.getCost()+"\n"+timeTemp+" milliseconds";
 								}
-								stack.add(l);
-								h.put(sonDesc, l);
+								openListStuck.add(l);
+								openListHash.put(sonDesc, l);
 							}
 						}
 					}
 
 
 
-					Node u= curr.exploreUp();
+					Node u= curr.exploreUp(); //creates up son
 					if(u!=null) {
-						nodesnum++;
+						nodeCounter++;
 						sonDesc=u.getDesc();
-						if(u.fcalculateA()> t) {
-							minF=Math.min(minF, u.fcalculateA());
+						if(u.fcalculate()> t) { //is h(son)+g(son) is greater than threshold
+							minF=Math.min(minF, u.fcalculate());
 							;
 						}
 						else {
-							if(h.containsKey(sonDesc) ) {
-								Node prevIdenticalSon=h.get(sonDesc);
-								if(prevIdenticalSon.getLuz().contentEquals("out"))
+							if(openListHash.containsKey(sonDesc) ) { //such state is in the open list
+								Node prevIdenticalSon=openListHash.get(sonDesc);
+								if(prevIdenticalSon.getmark().contentEquals("out")) //and mark as out- ignore
 									;
 								else {
-									if(prevIdenticalSon.fcalculateA() > u.fcalculateA())
+									if(prevIdenticalSon.fcalculate() > u.fcalculate()) //if current son is cheaper replace
 										prevIdenticalSon=u;
 									else
 										;
 								}
 							}
 							else {
-								if(u.isGoal()) {
+								if(u.isGoal()) { //goal Node is found, return result
 									time=System.currentTimeMillis()-start;
 									String timeTemp=String.format("%.4f",(time *Math.pow(10, -3)));
-									saveToFile(toTime, u, nodesnum);
-									return "IDA* result is\n"+ u.path().substring(0, u.path().length()-1)+"\n"+"num: "+nodesnum+"\ncost: "+u.getCost()+"\n"+timeTemp+" milliseconds";
+									saveToFile(toTime, u, nodeCounter);
+									return "IDA* result is\n"+ u.path().substring(0, u.path().length()-1)+"\n"+"num: "+nodeCounter+"\ncost: "+u.getCost()+"\n"+timeTemp+" milliseconds";
 
 								}
-								stack.add(u);
-								h.put(sonDesc, u);
+								openListStuck.add(u);
+								openListHash.put(sonDesc, u);
 							}
 						}
 					}
@@ -147,70 +164,70 @@ public class IDAstar implements Algorithm{
 
 
 
-					Node r= curr.exploreRight();
+					Node r= curr.exploreRight(); //creates right son
 					if(r!=null) {
-						nodesnum++;
+						nodeCounter++;
 						sonDesc=r.getDesc();
-						if(r.fcalculateA()> t) {
-							minF=Math.min(minF, r.fcalculateA());
+						if(r.fcalculate()> t) { //is h(son)+g(son) is greater than threshold
+							minF=Math.min(minF, r.fcalculate());
 							;
 						}
 						else {
-							if(h.containsKey(sonDesc) ) {
-								Node prevIdenticalSon=h.get(sonDesc);
-								if(prevIdenticalSon.getLuz().contentEquals("out"))
+							if(openListHash.containsKey(sonDesc) ) { //such state is in the open list
+								Node prevIdenticalSon=openListHash.get(sonDesc);
+								if(prevIdenticalSon.getmark().contentEquals("out")) //and mark as out- ignore
 									;
 								else {
-									if(prevIdenticalSon.fcalculateA() > r.fcalculateA())
+									if(prevIdenticalSon.fcalculate() > r.fcalculate()) //if current son is cheaper replace
 										prevIdenticalSon=r;
 									else
 										;
 								}
 							}
 							else {
-								if(r.isGoal()) {
+								if(r.isGoal()) { //goal Node is found, return result
 									time=System.currentTimeMillis()-start;
-									saveToFile(toTime, r, nodesnum);
+									saveToFile(toTime, r, nodeCounter);
 									String timeTemp=String.format("%.4f",(time *Math.pow(10, -3)));
-									return "IDA* result is\n"+ r.path().substring(0, r.path().length()-1)+"\n"+"num: "+nodesnum+"\ncost: "+r.getCost()+"\n"+timeTemp+" milliseconds";
+									return "IDA* result is\n"+ r.path().substring(0, r.path().length()-1)+"\n"+"num: "+nodeCounter+"\ncost: "+r.getCost()+"\n"+timeTemp+" milliseconds";
 								}
-								stack.add(r);
-								h.put(sonDesc, r);
+								openListStuck.add(r);
+								openListHash.put(sonDesc, r);
 							}
 						}
 					}
 
 
 
-					Node d=curr.exploreDown();
+					Node d=curr.exploreDown(); //creates down son
 					if(d!=null) {
-						nodesnum++;
+						nodeCounter++;
 						sonDesc=d.getDesc();
-						if(d.fcalculateA()> t) {
-							minF=Math.min(minF, d.fcalculateA());
+						if(d.fcalculate()> t) { //is h(son)+g(son) is greater than threshold
+							minF=Math.min(minF, d.fcalculate());
 							;
 						}
 						else {
-							if(h.containsKey(sonDesc) ) {
-								Node prevIdenticalSon=h.get(sonDesc);
-								if(prevIdenticalSon.getLuz().contentEquals("out"))
+							if(openListHash.containsKey(sonDesc) ) { //such state is in the open list
+								Node prevIdenticalSon=openListHash.get(sonDesc);
+								if(prevIdenticalSon.getmark().contentEquals("out")) //and mark as out- ignore
 									;
 								else {
-									if(prevIdenticalSon.fcalculateA() > d.fcalculateA())
+									if(prevIdenticalSon.fcalculate() > d.fcalculate())//if current son is cheaper replace
 										prevIdenticalSon=d;
 									else
 										;
 								}
 							}
 							else {
-								if(d.isGoal()) {
+								if(d.isGoal()) { //goal Node is found, return result
 									time=System.currentTimeMillis()-start;
-									saveToFile(toTime, d, nodesnum);
+									saveToFile(toTime, d, nodeCounter);
 									String timeTemp=String.format("%.4f",(time *Math.pow(10, -3)));
-									return "IDA* result is\n"+ d.path().substring(0, d.path().length()-1)+"\n"+"num: "+nodesnum+"\ncost: "+d.getCost()+"\n"+timeTemp+" milliseconds";
+									return "IDA* result is\n"+ d.path().substring(0, d.path().length()-1)+"\n"+"num: "+nodeCounter+"\ncost: "+d.getCost()+"\n"+timeTemp+" milliseconds";
 								}
-								stack.add(d);
-								h.put(sonDesc, d);
+								openListStuck.add(d);
+								openListHash.put(sonDesc, d);
 							}
 						}
 					}
@@ -218,12 +235,12 @@ public class IDAstar implements Algorithm{
 				}
 			}
 			
-			
 			t=minF;
-			root.setLuz("");
+			root.setmark("");
 		}
+		//no goal Node was found
 		time=System.currentTimeMillis()-start;
-		saveToFile(toTime, null, nodesnum);
+		saveToFile(toTime, null, nodeCounter);
 		String timeTemp=String.format("%.4f",(time *Math.pow(10, -3)));
 		return "no path\n"+timeTemp+" seconds";
 	}
